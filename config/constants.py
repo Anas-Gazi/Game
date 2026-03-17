@@ -1,5 +1,15 @@
 """Game constants and configuration."""
+import sys
 from enum import Enum
+from pathlib import Path
+
+
+BASE_DIR = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[1]))
+
+
+def resource_path(*parts: str) -> str:
+    """Return a runtime-safe path for local and packaged builds."""
+    return str(BASE_DIR.joinpath(*parts))
 
 
 class GameMode(Enum):
@@ -172,20 +182,20 @@ SAVE_DATA_FILENAME = "savegame.json"
 LEADERBOARD_FILENAME = "leaderboard.json"
 
 # ============== AUDIO ==============
-EAT_SOUND = "assets/sounds/eat.wav"
-GAME_OVER_SOUND = "assets/sounds/game_over.wav"
-CLICK_SOUND = "assets/sounds/click.wav"
-LEVEL_UP_SOUND = "assets/sounds/levelup.wav"  # New
-COMBO_SOUND = "assets/sounds/combo.wav"  # New
+EAT_SOUND = resource_path("assets", "sounds", "eat.wav")
+GAME_OVER_SOUND = resource_path("assets", "sounds", "game_over.wav")
+CLICK_SOUND = resource_path("assets", "sounds", "click.wav")
+LEVEL_UP_SOUND = resource_path("assets", "sounds", "levelup.wav")  # New
+COMBO_SOUND = resource_path("assets", "sounds", "combo.wav")  # New
 
 # ============== IMAGES ==============
-BACKGROUND_IMAGE = "assets/images/background.png"
-SNAKE_HEAD_IMAGE = "assets/images/snake_head.png"
-SNAKE_BODY_IMAGE = "assets/images/snake_body.png"
-FOOD_IMAGE = "assets/images/food.png"
-BONUS_FOOD_IMAGE = "assets/images/bonus_food.png"
-POISON_FOOD_IMAGE = "assets/images/poison_food.png"
-WALL_IMAGE = "assets/images/wall.png"
+BACKGROUND_IMAGE = resource_path("assets", "images", "background.png")
+SNAKE_HEAD_IMAGE = resource_path("assets", "images", "snake_head.png")
+SNAKE_BODY_IMAGE = resource_path("assets", "images", "snake_body.png")
+FOOD_IMAGE = resource_path("assets", "images", "food.png")
+BONUS_FOOD_IMAGE = resource_path("assets", "images", "bonus_food.png")
+POISON_FOOD_IMAGE = resource_path("assets", "images", "poison_food.png")
+WALL_IMAGE = resource_path("assets", "images", "wall.png")
 
 # ============== WINDOW ==============
 WINDOW_WIDTH = 420
