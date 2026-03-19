@@ -33,24 +33,27 @@ BOARD_ROWS = 32
 START_LENGTH = 4
 
 # ============== GAMEPLAY TIMING ==============
-BASE_MOVE_INTERVAL = 0.1  # Base speed (10 moves/sec)
-MIN_MOVE_INTERVAL = 0.04  # Max speed cap
-SPEED_STEP = 0.002  # Speed increase per score step
+BASE_MOVE_INTERVAL = 0.16  # Base speed (~6.25 moves/sec)
+MIN_MOVE_INTERVAL = 0.075  # Max speed cap to avoid ultra-fast late game
+SPEED_STEP = 0.001  # Speed increase per score step (gentler ramp)
 SPEED_SCORE_STEP = 50  # Score needed for one speed increase
-BOOST_INTERVAL_FACTOR = 0.7  # Speed multiplier when boosting
+BOOST_INTERVAL_FACTOR = 0.50  # Speed multiplier when boosting (lower is faster)
+BOOST_DURATION = 0.5  # Seconds boost stays active
+BOOST_COOLDOWN = 6.0  # Seconds before boost can be used again
+BOOST_RECOVERY_DURATION = 0.80  # Seconds to smoothly blend back to normal speed
 
 # ============== TIME ATTACK ==============
 TIME_ATTACK_DURATION = 60.0  # 60 seconds
 
 # ============== HARDCORE MODE ==============
-HARDCORE_BASE_MOVE_INTERVAL = 0.06  # Start faster
+HARDCORE_BASE_MOVE_INTERVAL = 0.10  # Start faster, but still controllable
 
 # ============== INPUT ==============
 TOUCH_SWIPE_THRESHOLD = 30  # Minimum swipe distance (pixels)
 DIRECTION_BUFFER_SIZE = 2  # Buffer queued input directions
 
 # ============== WALLS ==============
-WALL_COUNT = 8  # Number of wall groups in classic mode
+WALL_COUNT = 20  # Number of wall tiles in classic mode
 WALL_SAFE_RADIUS = 5  # Safe zone around snake spawn
 
 # ============== FOOD ==============
@@ -65,9 +68,22 @@ SPECIAL_FOOD_SPAWN_RATE = 0.15  # 15% chance of special food
 # ============== VISUAL EFFECTS ==============
 PARTICLE_COUNT = 12
 PARTICLE_LIFETIME = 0.6
+MAX_PARTICLES = 80
+MAX_FLOATING_TEXTS = 14
+VISUAL_DT_CAP = 0.05
 GLOW_INTENSITY = 0.8
 TRAIL_SEGMENTS = 5
 TRAIL_FADE_SPEED = 0.3
+SPEED_LINE_COUNT = 14
+SPEED_LINE_MAX_ALPHA = 0.22
+COMBO_AURA_THRESHOLD = 3
+
+# ============== RUNTIME QUALITY TUNING ==============
+AUTO_QUALITY_DOWNGRADE = True
+AUTO_QUALITY_HIGH_TO_BALANCED_FPS = 52
+AUTO_QUALITY_BALANCED_TO_PERFORMANCE_FPS = 34
+AUTO_QUALITY_DROP_HOLD_SECONDS = 2.4
+AUTO_QUALITY_SWITCH_COOLDOWN_SECONDS = 10.0
 
 # ============== SNAKE COLORS (REALISTIC) ==============
 SNAKE_HEAD_COLOR = (0.33, 0.48, 0.20, 1.0)      # Olive green head
@@ -88,9 +104,9 @@ MAX_COMBO_LEVEL = 10
 
 # ============== SPEED MODES ==============
 SPEED_MODES = {
-    "slow": 1.5,      # 1.5x slower (0.15 seconds per move)
-    "medium": 1.0,    # Normal speed (0.1 seconds per move)
-    "fast": 0.7,      # 0.7x slower = faster (0.07 seconds per move)
+    "slow": 1.35,     # Relaxed but still responsive
+    "medium": 1.0,    # Baseline pace
+    "fast": 0.72,     # Clearly faster pace
 }
 DEFAULT_SPEED_MODE = "medium"
 
@@ -156,6 +172,46 @@ SNAKE_SKIN_PALETTES = {
         "belly": (0.63, 0.58, 0.47, 1.0),
         "eye": (0.90, 0.76, 0.20, 1.0),
         "glow": (0.14, 0.14, 0.12, 0.24),
+    },
+    "neon": {
+        "head": (0.12, 0.92, 0.72, 1.0),
+        "body": (0.08, 0.82, 0.64, 1.0),
+        "dorsal": (0.05, 0.56, 0.44, 1.0),
+        "belly": (0.56, 0.95, 0.88, 1.0),
+        "eye": (0.96, 1.00, 0.86, 1.0),
+        "glow": (0.08, 0.96, 0.72, 0.32),
+    },
+    "gold": {
+        "head": (0.82, 0.66, 0.20, 1.0),
+        "body": (0.74, 0.58, 0.18, 1.0),
+        "dorsal": (0.52, 0.38, 0.12, 1.0),
+        "belly": (0.97, 0.88, 0.60, 1.0),
+        "eye": (0.30, 0.22, 0.06, 1.0),
+        "glow": (0.92, 0.76, 0.24, 0.30),
+    },
+    "shadow": {
+        "head": (0.16, 0.16, 0.20, 1.0),
+        "body": (0.12, 0.12, 0.16, 1.0),
+        "dorsal": (0.08, 0.08, 0.12, 1.0),
+        "belly": (0.46, 0.46, 0.54, 1.0),
+        "eye": (0.72, 0.72, 0.86, 1.0),
+        "glow": (0.30, 0.30, 0.42, 0.24),
+    },
+    "fire": {
+        "head": (0.90, 0.30, 0.14, 1.0),
+        "body": (0.80, 0.22, 0.10, 1.0),
+        "dorsal": (0.54, 0.12, 0.06, 1.0),
+        "belly": (0.98, 0.68, 0.30, 1.0),
+        "eye": (1.00, 0.92, 0.58, 1.0),
+        "glow": (0.98, 0.40, 0.16, 0.30),
+    },
+    "ice": {
+        "head": (0.56, 0.84, 0.96, 1.0),
+        "body": (0.46, 0.74, 0.92, 1.0),
+        "dorsal": (0.28, 0.54, 0.76, 1.0),
+        "belly": (0.88, 0.96, 1.00, 1.0),
+        "eye": (0.08, 0.30, 0.54, 1.0),
+        "glow": (0.60, 0.88, 1.00, 0.30),
     },
 }
 

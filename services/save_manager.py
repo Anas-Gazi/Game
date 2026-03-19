@@ -119,9 +119,14 @@ class SaveManager:
             },
             "settings": {
                 "sound_enabled": True,
+                "master_volume": 1.0,
+                "sfx_volume": 1.0,
+                "audio_output_mode": "auto",
                 "vibration_enabled": True,
                 "ads_removed": False,
                 "control_sensitivity": 1.0,
+                "graphics_quality": "balanced",
+                "show_grid": False,
             },
             "achievements": {ach: False for ach in constants.ACHIEVEMENTS},
             "daily_rewards": {

@@ -323,8 +323,7 @@ class GameBoard(Widget):
     def advance(self, dt):
         """Update particles and shake."""
         visual_dt = max(0.0, min(constants.VISUAL_DT_CAP, dt))
-        # Slow visual oscillation so brightness changes feel stable rather than flickery.
-        self._animation_time += visual_dt * 0.42
+        self._animation_time += visual_dt
         self._quality_cache_timer = max(0.0, self._quality_cache_timer - visual_dt)
         self._theme_cache_timer = max(0.0, self._theme_cache_timer - visual_dt)
         # Update particles
@@ -584,10 +583,10 @@ class GameBoard(Widget):
         full_fx = quality == "high"
         medium_fx = quality in ("high", "balanced")
         fx_scale = 1.0 if quality == "high" else 0.65 if quality == "balanced" else 0.35
-        # Anti-flicker rendering: keep style, but reduce moving ambience intensity.
-        anti_flicker = True
-        ambient_fx = medium_fx and not anti_flicker
-        ambient_full_fx = full_fx and not anti_flicker
+
+        # Balanced mode alternates heavy ambience every other visual frame.
+        if quality == "balanced" and int(self._animation_time * 18.0) % 2 == 1:
+            medium_fx = False
 
         def _scaled_count(value: int, *, min_value: int = 1) -> int:
             return max(min_value, int(value * fx_scale))
@@ -609,7 +608,7 @@ class GameBoard(Widget):
                 Color(0.10, 0.56, 0.72, 0.10)
                 Rectangle(pos=(self.x, self.y), size=(self.width, self.height))
 
-                if ambient_fx:
+                if medium_fx:
                     for i in range(_scaled_count(6)):
                         ray_x = self.x + self.width * ((i * 0.16 + self._animation_time * 0.02) % 1.1)
                         Color(0.76, 0.94, 1.0, 0.08)
@@ -630,7 +629,7 @@ class GameBoard(Widget):
                     Color(0.10, 0.44, 0.33, 0.30)
                     Line(points=[sx, self.y, sx + sway, self.y + self.height * (0.12 + (i % 3) * 0.04)], width=1.6)
 
-                if ambient_fx:
+                if medium_fx:
                     # Underwater moving tree/kelp clusters (replaces decorative fish to avoid visual conflict).
                     cluster_x = (0.14, 0.34, 0.56, 0.76, 0.90)
                     for idx, ratio in enumerate(cluster_x):
@@ -733,7 +732,7 @@ class GameBoard(Widget):
                         width=1.0,
                     )
 
-                if ambient_fx:
+                if medium_fx:
                     # Lightweight snowfall, intentionally subtle for visibility.
                     snow_count = 24 if full_fx else 12
                     for i in range(snow_count):
@@ -758,7 +757,7 @@ class GameBoard(Widget):
                             size=(self.width * fw, self.height * fh),
                         )
 
-                if ambient_full_fx:
+                if full_fx:
                     # Faint aurora borealis ribbon (pale cyan + violet blend).
                     Color(0.58, 0.92, 0.90, 0.05)
                     Line(points=[
@@ -807,7 +806,7 @@ class GameBoard(Widget):
                     Color(0.87, 0.68, 0.34, 0.30)
                     Ellipse(pos=(dune_x, dune_y), size=(dune_w, dune_h))
 
-                if ambient_fx:
+                if medium_fx:
                     dust_count = 14 if full_fx else 8
                     for i in range(dust_count):
                         dx = self.x + ((self._animation_time * (22 + i) + i * 45) % (self.width + 30)) - 15
@@ -838,7 +837,7 @@ class GameBoard(Widget):
                 Color(0.97, 0.90, 0.66, 0.08)
                 Ellipse(pos=(self.x - self.width * 0.18, self.y + self.height * 0.62), size=(self.width * 1.36, self.height * 0.62))
 
-                if ambient_fx:
+                if medium_fx:
                     cloud_specs = (
                         (0.18, 0.84, 0.09, 0.06, 0.42),
                         (0.52, 0.78, 0.12, 0.07, 0.34),
@@ -868,7 +867,7 @@ class GameBoard(Widget):
                         Color(0.92, 0.72, 0.22, 0.20)
                         Ellipse(pos=(px + grass_w * 0.24 + sway * 0.8, py + grass_h * 0.69), size=(flower_size * 0.5, flower_size * 0.5))
 
-                if ambient_fx:
+                if medium_fx:
                     drift_count = 8 if full_fx else 4
                     for i in range(drift_count):
                         px = self.x + ((self._animation_time * (18 + i * 2) + i * self.width * 0.14) % (self.width + 30)) - 15
@@ -885,7 +884,7 @@ class GameBoard(Widget):
                 if medium_fx:
                     Color(0.10, 0.15, 0.08, 0.12)
                     Ellipse(pos=(self.x - self.width * 0.10, self.y - self.height * 0.18), size=(self.width * 1.20, self.height * 1.36))
-                if ambient_full_fx:
+                if full_fx:
                     Color(0.88, 0.94, 0.78, 0.05)
                     Ellipse(pos=(self.x - self.width * 0.08, self.y - self.height * 0.10), size=(self.width * 1.16, self.height * 1.20))
 
@@ -909,7 +908,7 @@ class GameBoard(Widget):
                         Rectangle(pos=(bx - 0.6, by + wing_h * 0.15), size=(1.2, wing_h * 0.9))
 
             # Ambient predators: cinematic flavor only (non-collision), keeps hunting vibe realistic.
-            if ambient_fx:
+            if medium_fx:
                 if environment in {"meadow", "desert", "iceland"}:
                     hawk_x = self.x + ((self._animation_time * (26.0 if environment == "desert" else 20.0)) % (self.width + 120)) - 60
                     hawk_y = self.y + self.height * (0.72 if environment == "desert" else (0.80 if environment == "iceland" else 0.76))
@@ -1050,7 +1049,7 @@ class GameBoard(Widget):
             food_pos = self.controller.food.get_render_position()
             x = self.x + offset_x + food_pos[0] * cell_width
             y = self.y + offset_y + food_pos[1] * cell_height
-            pulse = 0.035 * (1 + math.sin(self._animation_time * 2.0))
+            pulse = 0.12 * (1 + math.sin(self._animation_time * 6.0))
             meal_size_factor = 0.74 + pulse
             glow_size = cell_width * (1.16 + pulse)
 
@@ -1123,7 +1122,7 @@ class GameBoard(Widget):
                     "lobster": 1.10,
                     "crab": 0.92,
                 }.get(variant, 1.0)
-                swim_bob = math.sin(self._animation_time * 1.2 + (0.7 if facing > 0 else 2.2))
+                swim_bob = math.sin(self._animation_time * 3.2 + (0.7 if facing > 0 else 2.2))
                 fish_w = core_size_w * 0.90 * species_scale
                 fish_h = core_size_h * 0.48 * species_scale
                 fish_x = core_x + (core_size_w - fish_w) * 0.5
@@ -1369,16 +1368,22 @@ class GameBoard(Widget):
                 y_offsets = [0.0]
 
                 if wrapped_x:
-                    # Draw both horizontal companions during wrapped frames to avoid side-specific popping.
-                    x_offsets.extend([board_w, -board_w])
+                    # Left wrap (e.g. 0 -> cols-1) interpolates into negatives.
+                    if curr_x > prev_x and seg_x < 0.0:
+                        x_offsets.append(board_w)
+                    # Right wrap (e.g. cols-1 -> 0) interpolates above cols-1.
+                    elif curr_x < prev_x and seg_x > board_w - 1.0:
+                        x_offsets.append(-board_w)
 
                 if wrapped_y:
-                    # Draw both vertical companions during wrapped frames to avoid bottom/top direction snapping.
-                    y_offsets.extend([board_h, -board_h])
+                    # Bottom wrap (0 -> rows-1) interpolates into negatives.
+                    if curr_y > prev_y and seg_y < 0.0:
+                        y_offsets.append(board_h)
+                    # Top wrap (rows-1 -> 0) interpolates above rows-1.
+                    elif curr_y < prev_y and seg_y > board_h - 1.0:
+                        y_offsets.append(-board_h)
 
-                # Preserve order while removing duplicate offset pairs.
-                pairs = [(ox, oy) for ox in x_offsets for oy in y_offsets]
-                return list(dict.fromkeys(pairs))
+                return [(ox, oy) for ox in x_offsets for oy in y_offsets]
 
             palette = self._snake_palette()
             for i, seg in enumerate(interpolated):
@@ -1397,7 +1402,7 @@ class GameBoard(Widget):
 
                     if i == 0:  # Head - 3D effect with layers
                         if medium_fx and self.controller.scoring.combo_level >= constants.COMBO_AURA_THRESHOLD:
-                            aura_pulse = 0.03 * (1 + math.sin(self._animation_time * 3.0))
+                            aura_pulse = 0.08 * (1 + math.sin(self._animation_time * 9.0))
                             Color(0.95, 0.80, 0.35, 0.20 + aura_pulse)
                             Ellipse(
                                 pos=(x - cell_width * 0.22, y - cell_height * 0.22),
@@ -1998,17 +2003,17 @@ class GameScreen(Screen):
                 self.ids['debug_label'].opacity = 0.85 if self.debug_text else 0
             if 'boost_btn' in self.ids:
                 if app.game_controller.boost_active:
-                    self.ids['boost_btn'].text = f"BOOST ON\n{app.game_controller.boost_timer:.1f}s"
+                    self.ids['boost_btn'].text = f"[b]BOOST ON[/b]\n[size=9]{app.game_controller.boost_timer:.1f}s[/size]"
                     self.ids['boost_btn'].disabled = True
                     self.ids['boost_btn'].background_color = (0.30, 0.36, 0.20, 1.0)
                 elif app.game_controller.boost_cooldown_timer > 0:
-                    self.ids['boost_btn'].text = f"BOOST CD\n{app.game_controller.boost_cooldown_timer:.1f}s"
+                    self.ids['boost_btn'].text = f"[b]BOOST CD[/b]\n[size=9]{app.game_controller.boost_cooldown_timer:.1f}s[/size]"
                     self.ids['boost_btn'].disabled = True
                     self.ids['boost_btn'].background_color = (0.22, 0.18, 0.12, 1.0)
                 else:
-                    self.ids['boost_btn'].text = "BOOST"
+                    self.ids['boost_btn'].text = "[b]BOOST[/b]\n[size=9]Shift[/size]"
                     self.ids['boost_btn'].disabled = False
-                    self.ids['boost_btn'].background_color = (0.28, 0.38, 0.30, 0.95)
+                    self.ids['boost_btn'].background_color = (0.22, 0.30, 0.16, 1.0)
 
     def _is_dev_mode_enabled(self, app) -> bool:
         """Return True when dev overlay should be visible."""
@@ -3211,19 +3216,19 @@ class SnakeGameApp(App):
 
         layout.bind(pos=_update_layout_bg, size=_update_layout_bg)
 
-        hud = BoxLayout(size_hint_y=0.065, spacing=3, padding=[3, 2])
+        hud = BoxLayout(size_hint_y=0.085, spacing=4, padding=[4, 3])
         with hud.canvas.before:
-            Color(0.07, 0.08, 0.12, 0.96)
+            Color(0.08, 0.10, 0.16, 0.96)
             hud_rect = RoundedRectangle(pos=hud.pos, size=hud.size, radius=[10])
-            Color(0.22, 0.24, 0.32, 0.12)
+            Color(0.15, 0.24, 0.40, 0.16)
             stone_band_top = Rectangle(pos=hud.pos, size=hud.size)
-            Color(0.12, 0.14, 0.20, 0.12)
+            Color(0.12, 0.20, 0.34, 0.12)
             stone_band_mid = Rectangle(pos=hud.pos, size=hud.size)
-            Color(0.84, 0.86, 0.92, 0.10)
+            Color(0.72, 0.86, 1.0, 0.16)
             stone_crack_a = Line(points=[], width=1.0)
-            Color(0.74, 0.76, 0.84, 0.10)
+            Color(0.62, 0.78, 0.96, 0.12)
             stone_crack_b = Line(points=[], width=1.0)
-            Color(0.76, 0.80, 0.92, 0.24)
+            Color(0.84, 0.92, 1.0, 0.20)
             hud_line = Line(rounded_rectangle=(hud.x, hud.y, hud.width, hud.height, 10), width=1.2)
 
         def _update_hud(*_):
@@ -3250,15 +3255,15 @@ class SnakeGameApp(App):
         hud.bind(pos=_update_hud, size=_update_hud)
 
         def make_chip(color_rgba):
-            chip = BoxLayout(orientation="vertical", padding=[4, 2], spacing=0)
+            chip = BoxLayout(orientation="vertical", padding=[5, 3], spacing=0)
             with chip.canvas.before:
-                Color(0.10, 0.11, 0.15, 0.98)
+                Color(0.08, 0.10, 0.14, 0.98)
                 chip_bg = RoundedRectangle(pos=chip.pos, size=chip.size, radius=[8])
-                Color(0.18, 0.20, 0.28, 0.16)
+                Color(0.16, 0.24, 0.34, 0.18)
                 grain_a = Rectangle(pos=chip.pos, size=chip.size)
-                Color(0.12, 0.14, 0.20, 0.12)
+                Color(0.10, 0.18, 0.30, 0.12)
                 grain_b = Rectangle(pos=chip.pos, size=chip.size)
-                Color(0.90, 0.90, 0.96, 0.12)
+                Color(0.78, 0.88, 1.0, 0.16)
                 knot = Ellipse(pos=chip.pos, size=(1, 1))
                 Color(*color_rgba)
                 chip_line = Line(rounded_rectangle=(chip.x, chip.y, chip.width, chip.height, 8), width=1.1)
@@ -3277,24 +3282,24 @@ class SnakeGameApp(App):
             chip.bind(pos=update_chip, size=update_chip)
             return chip
 
-        score_chip = make_chip((0.66, 0.78, 0.96, 0.45))
-        score_label = Label(text=screen.score_text, font_size="10.5sp", color=(0.95, 0.98, 1, 1), bold=True)
-        score_chip.add_widget(Label(text="SCORE", font_size="7.5sp", color=(0.86, 0.90, 0.98, 0.96), bold=True))
+        score_chip = make_chip((0.52, 0.86, 1.0, 0.48))
+        score_label = Label(text=screen.score_text, font_size="12sp", color=(0.95, 0.98, 1, 1), bold=True)
+        score_chip.add_widget(Label(text="SCORE", font_size="8.5sp", color=(0.82, 0.92, 1.0, 0.98), bold=True))
         score_chip.add_widget(score_label)
 
-        high_chip = make_chip((0.96, 0.80, 0.54, 0.45))
-        high_label = Label(text=screen.high_score_text, font_size="10.5sp", color=(1.0, 0.95, 0.72, 1), bold=True)
-        high_chip.add_widget(Label(text="HIGH", font_size="7.5sp", color=(0.98, 0.90, 0.62, 0.96), bold=True))
+        high_chip = make_chip((1.0, 0.84, 0.56, 0.48))
+        high_label = Label(text=screen.high_score_text, font_size="12sp", color=(1.0, 0.95, 0.72, 1), bold=True)
+        high_chip.add_widget(Label(text="BEST", font_size="8.5sp", color=(0.98, 0.90, 0.58, 0.98), bold=True))
         high_chip.add_widget(high_label)
 
-        combo_chip = make_chip((0.84, 0.72, 0.56, 0.42))
-        combo_label = Label(text=screen.combo_text, font_size="10.5sp", color=(1.0, 0.90, 0.82, 1), bold=True)
-        combo_chip.add_widget(Label(text="COMBO", font_size="7.5sp", color=(1.0, 0.84, 0.70, 0.96), bold=True))
+        combo_chip = make_chip((1.0, 0.72, 0.56, 0.48))
+        combo_label = Label(text=screen.combo_text, font_size="12sp", color=(1.0, 0.90, 0.82, 1), bold=True)
+        combo_chip.add_widget(Label(text="COMBO", font_size="8.5sp", color=(1.0, 0.80, 0.68, 0.98), bold=True))
         combo_chip.add_widget(combo_label)
 
-        mode_chip = make_chip((0.72, 0.78, 0.90, 0.42))
-        mode_label = Label(text=screen.mode_text, font_size="10.5sp", color=(0.88, 0.96, 1.0, 1), bold=True)
-        mode_chip.add_widget(Label(text="MODE", font_size="7.5sp", color=(0.78, 0.88, 0.98, 0.96), bold=True))
+        mode_chip = make_chip((0.72, 0.80, 1.0, 0.48))
+        mode_label = Label(text=screen.mode_text, font_size="12sp", color=(0.88, 0.96, 1.0, 1), bold=True)
+        mode_chip.add_widget(Label(text="MODE", font_size="8.5sp", color=(0.72, 0.90, 1.0, 0.98), bold=True))
         mode_chip.add_widget(mode_label)
 
         hud.add_widget(score_chip)
@@ -3303,7 +3308,7 @@ class SnakeGameApp(App):
         hud.add_widget(mode_chip)
         layout.add_widget(hud)
 
-        board_wrap = BoxLayout(orientation="vertical", size_hint_y=0.87, padding=[3, 3])
+        board_wrap = BoxLayout(orientation="vertical", size_hint_y=0.80, padding=[3, 3])
         with board_wrap.canvas.before:
             Color(0.08, 0.10, 0.14, 0.98)
             board_shadow = RoundedRectangle(pos=board_wrap.pos, size=board_wrap.size, radius=[12])
@@ -3338,10 +3343,10 @@ class SnakeGameApp(App):
         board_wrap.add_widget(board)
         layout.add_widget(board_wrap)
 
-        status_row = BoxLayout(size_hint_y=0.028, spacing=5, padding=[2, 0])
-        fps_label = Label(text=screen.fps_text, font_size="8.5sp", color=(0.90, 0.82, 0.65, 1), bold=True)
-        quality_label = Label(text=screen.quality_text, font_size="8.5sp", color=(0.97, 0.89, 0.66, 1), bold=True)
-        status_label = Label(text="", font_size="8.5sp", color=(0.98, 0.79, 0.59, 1), bold=True, opacity=0)
+        status_row = BoxLayout(size_hint_y=0.04, spacing=6, padding=[3, 0])
+        fps_label = Label(text=screen.fps_text, font_size="9.5sp", color=(0.90, 0.82, 0.65, 1), bold=True)
+        quality_label = Label(text=screen.quality_text, font_size="9.5sp", color=(0.97, 0.89, 0.66, 1), bold=True)
+        status_label = Label(text="", font_size="9.5sp", color=(0.98, 0.79, 0.59, 1), bold=True, opacity=0)
         debug_label = Label(
             text="",
             font_size="8sp",
@@ -3358,23 +3363,23 @@ class SnakeGameApp(App):
         status_row.add_widget(debug_label)
         layout.add_widget(status_row)
 
-        controls = BoxLayout(size_hint_y=0.064, spacing=4, padding=[2, 0])
+        controls = BoxLayout(size_hint_y=0.095, spacing=6, padding=[3, 1])
 
         def _restart_run(*_):
             app = App.get_running_app()
             app.root.current = 'menu'
             app.root.get_screen('menu').start_game()
 
-        btn_pause = Button(text="PAUSE", font_size="10sp", background_normal="", background_down="", background_color=(0.20, 0.24, 0.34, 0.95))
+        btn_pause = Button(text="PAUSE\n(Space)", font_size="11sp", background_color=(0.22, 0.26, 0.36, 0.92))
         btn_pause.bind(on_press=lambda x: App.get_running_app().game_controller.pause() if not App.get_running_app().game_controller.current_mode.is_paused else App.get_running_app().game_controller.resume())
 
-        btn_restart = Button(text="RESTART", font_size="10sp", background_normal="", background_down="", background_color=(0.26, 0.30, 0.38, 0.95))
+        btn_restart = Button(text="RESTART\n(R)", font_size="11sp", background_color=(0.26, 0.30, 0.40, 0.92))
         btn_restart.bind(on_press=_restart_run)
 
-        btn_boost = Button(text="BOOST", font_size="10sp", background_normal="", background_down="", background_color=(0.28, 0.38, 0.30, 0.95))
+        btn_boost = Button(text="BOOST\n(Shift)", font_size="11sp", background_color=(0.30, 0.44, 0.34, 0.94))
         btn_boost.bind(on_press=lambda x: screen.use_boost())
 
-        btn_menu = Button(text="MENU", font_size="10sp", background_normal="", background_down="", background_color=(0.24, 0.24, 0.32, 0.95))
+        btn_menu = Button(text="MENU\n(Esc)", font_size="11sp", background_color=(0.26, 0.24, 0.34, 0.92))
         btn_menu.bind(on_press=lambda x: screen.go_menu())
 
         self._wire_click_sounds(btn_pause, btn_restart, btn_boost, btn_menu)
@@ -3386,9 +3391,9 @@ class SnakeGameApp(App):
         layout.add_widget(controls)
 
         helper = Label(
-            text="[size=8][color=aec3de]WASD/Arrows | Space Pause | Shift Boost | R Restart | Esc Menu[/color][/size]",
+            text="[size=9][color=aec3de]WASD/Arrows  |  Space Pause  |  Shift Boost  |  R Restart  |  Esc Menu[/color][/size]",
             markup=True,
-            size_hint_y=0.020,
+            size_hint_y=0.035,
             halign="center",
             valign="middle",
         )
@@ -3397,8 +3402,8 @@ class SnakeGameApp(App):
 
         effect_label = Label(
             text="",
-            size_hint_y=0.014,
-            font_size="9sp",
+            size_hint_y=0.03,
+            font_size="10sp",
             color=(0.98, 0.92, 0.72, 1),
             bold=True,
             opacity=0,

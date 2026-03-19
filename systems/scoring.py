@@ -54,12 +54,34 @@ class ScoringSystem:
 
         # Add XP
         xp_amount = int(base_points * (self.progression_system.level / 10))
-        if food_type == "bonus":
+        if food_type == "poison":
+            xp_amount = 0
+        elif food_type == "bonus":
             xp_amount = int(xp_amount * constants.XP_MULTIPLIER_BONUS)
-        self.progression_system.add_xp(max(1, xp_amount))
+        if xp_amount > 0:
+            self.progression_system.add_xp(max(1, xp_amount))
 
         if self.on_score_changed:
             self.on_score_changed(self.score, self.high_score)
+
+    def add_flat_points(self, points: int) -> None:
+        """Add direct points without affecting combo progression rules."""
+        self.score += points
+        self.high_score = max(self.high_score, self.score)
+        if self.on_score_changed:
+            self.on_score_changed(self.score, self.high_score)
+
+    def extend_combo(self, extra_seconds: float) -> None:
+        """Extend active combo timer window."""
+        self.combo_timer = max(self.combo_timer, constants.COMBO_TIMEOUT) + max(0.0, extra_seconds)
+
+    def boost_combo(self, levels: int = 1) -> None:
+        """Increase combo level safely for ability effects."""
+        if levels <= 0:
+            return
+        self.combo_level = min(constants.MAX_COMBO_LEVEL, self.combo_level + levels)
+        if self.on_combo_changed:
+            self.on_combo_changed(self.combo_level)
 
     def update(self, dt: float) -> bool:
         """Update combo timer.

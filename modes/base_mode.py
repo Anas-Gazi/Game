@@ -113,13 +113,12 @@ class TimeAttackMode(GameMode):
         return True
 
     def update(self, dt: float) -> None:
-        """Update time remaining without forcing game over.
-
-        Time Attack keeps its timer for HUD/score context, but no longer auto-ends.
-        """
+        """Update timer and end game when time reaches zero."""
         if not self.is_paused and not self.is_game_over:
             self.elapsed_time += dt
             self.remaining_time = max(0, constants.TIME_ATTACK_DURATION - self.elapsed_time)
+            if self.remaining_time <= 0:
+                self.end_game()
 
     def reset(self) -> None:
         super().reset()

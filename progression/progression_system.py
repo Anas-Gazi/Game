@@ -49,30 +49,34 @@ class ProgressionSystem:
         Args:
             amount: XP to add.
         """
-        current_xp = self.xp
-        new_xp = current_xp + amount
-        xp_needed = constants.LEVEL_THRESHOLD
+        if amount <= 0:
+            return
 
-        if new_xp >= xp_needed:
-            # Level up
-            new_level = min(self.level + 1, constants.LEVELS_MAX)
-            self.save_manager.set_nested("player.level", new_level)
-            self.save_manager.set_nested("player.xp", new_xp - xp_needed)
-            self.save_manager.set_nested("player.total_xp", self.total_xp + amount)
-            self.save_manager.save()
+        total_xp = self.total_xp + amount
+        new_level = self.level
+        new_xp = self.xp + amount
+        leveled_up = False
 
-            if new_level >= constants.LEVELS_MAX:
-                self.unlock_achievement("100_level")
+        while new_xp >= constants.LEVEL_THRESHOLD and new_level < constants.LEVELS_MAX:
+            new_xp -= constants.LEVEL_THRESHOLD
+            new_level += 1
+            leveled_up = True
 
-            # Check for new unlocks
+        if new_level >= constants.LEVELS_MAX:
+            new_xp = min(new_xp, constants.LEVEL_THRESHOLD - 1)
+
+        self.save_manager.set_nested("player.level", new_level)
+        self.save_manager.set_nested("player.xp", new_xp)
+        self.save_manager.set_nested("player.total_xp", total_xp)
+        self.save_manager.save()
+
+        if new_level >= constants.LEVELS_MAX:
+            self.unlock_achievement("100_level")
+
+        if leveled_up:
             self._check_unlocks(new_level)
-
             if self.on_level_up:
-                self.on_level_up(new_level, self.xp)
-        else:
-            self.save_manager.set_nested("player.xp", new_xp)
-            self.save_manager.set_nested("player.total_xp", self.total_xp + amount)
-            self.save_manager.save()
+                self.on_level_up(new_level, new_xp)
 
     def unlock_achievement(self, achievement_id: str) -> bool:
         """Unlock an achievement.
