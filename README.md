@@ -1,228 +1,128 @@
-# Snake Game
+# Snake Legends
 
-A production-style Snake game built with Python and Kivy, structured for Android packaging with Buildozer.
+A polished Snake game built with Python and Kivy, featuring multiple game modes, progression systems, dynamic environments, and production-style release tooling.
 
-## Folder Structure
+## Highlights
+
+- Smooth fixed-step gameplay with interpolated rendering.
+- Multiple game modes: Classic, No Wall, Time Attack, Hardcore.
+- Progression, achievements, combo scoring, and local high-score persistence.
+- Environment-aware food variants and dynamic map atmosphere.
+- Keyboard and touch controls.
+- Windows packaging flow for player-friendly distribution.
+- Android-ready Buildozer configuration.
+
+## Latest Updates
+
+### First Major Update (v1.0.0)
+
+- Introduced full-screen UI overhaul across Menu, Game, Progression, Leaderboard, Settings, and Game Over.
+- Added speed mode preferences and improved user-facing gameplay controls.
+- Improved visual quality with layered snake rendering and premium effects.
+- Added Windows release pipeline using PyInstaller and scripted release packaging.
+
+### Current Update (v1.1.0)
+
+- Improved in-game HUD and controls with a compact classic layout for better map visibility.
+- Reduced visible graphics flicker by stabilizing high-intensity visual oscillation.
+- Smoothed edge wrap rendering so snake transitions are continuous across all borders.
+- Added/updated audio assets and ambient tracks for richer game presentation.
+- Strengthened gameplay polish and rendering consistency after recent UX iterations.
+
+For complete details, see `CHANGELOG.md`.
+
+## Project Structure
 
 ```text
 snake_game/
 ├── main.py
-├── ads_manager.py
+├── config/
+├── core/
 ├── game/
-│   ├── collision.py
-│   ├── food.py
-│   ├── game_controller.py
-│   ├── settings.py
-│   └── snake.py
+├── modes/
+├── progression/
+├── retention/
+├── services/
+├── systems/
 ├── ui/
-│   ├── game_over_screen.kv
-│   ├── game_screen.kv
-│   └── menu_screen.kv
 ├── assets/
 │   ├── images/
-│   │   ├── background.png
-│   │   ├── food.png
-│   │   ├── snake_body.png
-│   │   └── snake_head.png
 │   └── sounds/
-│       ├── click.wav
-│       ├── eat.wav
-│       └── game_over.wav
-├── utils/
-│   ├── score_manager.py
-│   └── storage.py
+├── build_windows.ps1
 ├── buildozer.spec
-└── README.md
+└── CHANGELOG.md
 ```
 
-## Features
+## Controls
 
-- Grid-based smooth snake movement with 60 FPS rendering
-- Swipe controls for mobile devices
-- Direction reversal protection
-- Score and locally persisted high score
-- Difficulty ramp based on score
-- Pause, resume, restart, and game over flow
-- Particle burst when food is eaten
-- Audio hooks for click, eat, and game over events
-- Android-ready Buildozer configuration
-- Monetization-ready ad manager stubs for banner and rewarded ads
+- `W`, `A`, `S`, `D` or Arrow Keys: Move
+- `Space`: Pause/Resume
+- `Shift`: Boost
+- `R`: Restart run
+- `Esc`: Return to menu
 
 ## Run Locally
 
-1. Create and activate a Python 3.13 virtual environment. Avoid Python 3.14 for now because Kivy Windows wheels are not available there in this setup.
-2. Install Kivy:
+1. Create and activate a Python `3.13` virtual environment.
+2. Install dependencies:
 
 ```bash
 pip install kivy==2.3.1
 ```
 
-3. Start the game:
+3. Launch:
 
 ```bash
 python main.py
 ```
 
-## Build Windows Release For Players
+## Build Windows Release
 
-This project now includes a PyInstaller build flow for Windows so players do not need Python or Kivy installed.
-
-1. From the `snake_game` folder, run:
+From the `snake_game` folder:
 
 ```powershell
 ./build_windows.ps1
 ```
 
-2. The build script creates:
+Build outputs:
 
 ```text
 dist/SnakeLegends/
 release/SnakeLegends-windows.zip
 ```
 
-3. Upload `release/SnakeLegends-windows.zip` to itch.io.
+Distribute `release/SnakeLegends-windows.zip` to players.
 
-4. Players only need to:
-- download the zip
-- extract the zip
-- open the `SnakeLegends` folder
-- run `SnakeLegends.exe`
+## Build Android With Buildozer
 
-No Python installation is required for players.
+Buildozer is recommended on Linux/WSL.
 
-## Quick itch.io Publish (No Setup For Players)
-
-Use this every time you release:
-
-1. Build the Windows package:
-
-```powershell
-./build_windows.ps1
-```
-
-2. Upload this file to itch.io:
-
-```text
-release/SnakeLegends-windows.zip
-```
-
-3. In itch.io settings:
-- Kind of project: `Downloadable`
-- Platforms: `Windows`
-- Pricing: `Free` (or your choice)
-
-4. In your game page instructions, tell players:
-- Download zip
-- Extract zip
-- Open folder
-- Run `SnakeLegends.exe`
-
-## Copy-Paste itch.io Page Text
-
-### Short Description
-
-Classic Snake, upgraded with modern visuals, multiple game modes, progression, and competitive high scores.
-
-### Full Description
-
-Snake Legends is a polished modern Snake game made with Python and Kivy.
-
-What you get:
-- Multiple game modes (Classic, No Wall, Time Attack, Hardcore)
-- Real-time scoring, combo system, and high score tracking
-- Level progression and unlockable cosmetics
-- Smooth controls (keyboard + swipe support)
-- Modern UI with a clean PC-friendly layout
-
-How to play:
-- Move: `W A S D`
-- Pause/Resume: `Space`
-- Goal: Eat food, avoid collisions, and beat your best score.
-
-Install steps:
-1. Download `SnakeLegends-windows.zip`
-2. Extract the zip
-3. Open the extracted folder
-4. Run `SnakeLegends.exe`
-
-No Python installation is required.
-
-### Controls (Paste in itch.io Metadata)
-
-- `W` = Up
-- `A` = Left
-- `S` = Down
-- `D` = Right
-- `Space` = Pause / Resume
-
-### Recommended Screenshots to Upload
-
-1. Main menu (showing game modes)
-2. In-game action with HUD visible
-3. Game over summary screen
-4. Leaderboard screen
-5. Settings screen
-
-## Release Checklist
-
-- [ ] Run `./build_windows.ps1`
-- [ ] Confirm file exists: `release/SnakeLegends-windows.zip`
-- [ ] Test `SnakeLegends.exe` from extracted zip
-- [ ] Upload zip to itch.io
-- [ ] Update version notes/changelog
-- [ ] Publish page
-
-## Versioning Workflow
-
-Use this lightweight release flow for each update:
-
-1. Update `CHANGELOG.md` with new features, changes, and fixes.
-2. Bump the version number using semantic versioning:
-- `MAJOR.MINOR.PATCH`
-- Example: `1.0.0` -> `1.0.1` for fixes, `1.1.0` for new features.
-3. Build a new release zip with `./build_windows.ps1`.
-4. Upload the new zip to itch.io and add the version notes.
-5. Create a matching git tag (optional but recommended):
-
-```bash
-git tag v1.0.0
-git push origin v1.0.0
-```
-
-See release history in `CHANGELOG.md`.
-
-## Build Android APK With Buildozer
-
-Buildozer is typically run inside Linux or WSL. On Windows, use WSL2 or a Linux machine.
-
-1. Install system dependencies for Buildozer and Android SDK tooling.
-2. Open the project directory.
-3. Run:
+Debug build:
 
 ```bash
 buildozer android debug
 ```
 
-4. The generated APK will be available under the `bin/` directory.
-
-To build a release package:
+Release build:
 
 ```bash
 buildozer android release
 ```
 
-## Google Play Store Publishing Checklist
+## Release Workflow
 
-1. Replace placeholder art and sound assets with production assets.
-2. Set your final package domain and app signing configuration in `buildozer.spec`.
-3. Prepare store listing assets: icon, screenshots, feature graphic, privacy policy.
-4. Integrate real AdMob SDK logic into `ads_manager.py` if monetization is required.
-5. Generate a signed AAB or APK for release.
-6. Upload the release build in the Google Play Console.
-7. Complete content rating, target audience, data safety, and app access forms.
+1. Update `CHANGELOG.md`.
+2. Build release package (`./build_windows.ps1`).
+3. Validate packaged executable.
+4. Push code and optional tag:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
 
 ## Notes
 
-- The repository includes placeholder media files so the asset pipeline is ready.
-- The game gracefully falls back to simple shapes if any asset fails to load.
-- High score data is stored in Kivy's user data directory on desktop and Android.
+- Save data is stored locally via the save service.
+- Asset fallback paths are implemented to keep runtime resilient.
+- The repository currently contains historical backup snapshots used during UI/UX recovery.

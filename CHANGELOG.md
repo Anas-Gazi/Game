@@ -2,11 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-This project follows a simple semantic versioning style:
+This project follows semantic versioning:
 - MAJOR.MINOR.PATCH
 - MAJOR: breaking changes
 - MINOR: new features
 - PATCH: bug fixes and small improvements
+
+## [1.1.0] - 2026-03-19
+
+### Added
+- New ambient/background audio tracks for multiple environments.
+- Additional UI and rendering polish assets.
+- Internal backup snapshots used during rapid UI/UX recovery and rollback safety.
+
+### Changed
+- Refined in-game HUD and bottom controls to a compact classic style.
+- Increased map-visible area by reducing gameplay control strip height.
+- Improved readability of gameplay action controls and top status chips.
+- Updated project documentation for release-quality GitHub presentation.
+
+### Fixed
+- Reduced graphics flicker from high-intensity ambient/pulse effects.
+- Smoothed snake border-wrap rendering across left, right, top, and bottom edges.
+- Improved transition continuity during edge crossing to reduce visible snapping.
 
 ## [1.0.0] - 2026-03-17
 
@@ -22,14 +40,3 @@ This project follows a simple semantic versioning style:
 ### Changed
 - Updated UI behavior and spacing to improve readability and desktop feel.
 - Improved release documentation and player install instructions.
-
-## [Unreleased]
-
-### Added
-- Placeholder for upcoming features.
-
-### Changed
-- Placeholder for upcoming improvements.
-
-### Fixed
-- Placeholder for upcoming fixes.
